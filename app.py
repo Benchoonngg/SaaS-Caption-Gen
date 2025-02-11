@@ -1,9 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from datetime import datetime
 import logging
-from werkzeug.security import generate_password_hash, check_password_hash
+logging.basicConfig(level=logging.DEBUG)
+
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from datetime import datetime
+from werkzeug.security import generate_password_hash
+from functools import wraps
+from models.user import db, User
+from controllers.caption_controller import CaptionController
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -14,35 +18,30 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
 
 # Initialize extensions
-db = SQLAlchemy(app)
+db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-# User Model
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    credits = db.Column(db.Integer, default=5)
-    is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
 
+# Admin required decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Admin access required')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Routes
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # If user is authenticated, show different nav
+    return render_template('index.html', current_user=current_user)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -99,6 +98,61 @@ def dashboard():
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+# Admin routes
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_dashboard():
+    users = User.query.all()
+    return render_template('admin/dashboard.html', users=users)
+
+@app.route('/admin/user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        user.email = request.form.get('email')
+        user.credits = int(request.form.get('credits', 0))
+        user.is_admin = bool(request.form.get('is_admin'))
+        
+        try:
+            db.session.commit()
+            flash('User updated successfully')
+        except Exception as e:
+            db.session.rollback()
+            flash('Error updating user')
+            
+    return render_template('admin/edit_user.html', user=user)
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('Cannot delete your own account')
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash('User deleted successfully')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error deleting user')
+        
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/generate-caption', methods=['POST'])
+@login_required
+def generate_caption():
+    prompt = request.json.get('prompt')
+    if not prompt:
+        return jsonify({"error": "No prompt provided"}), 400
+        
+    return CaptionController.generate(current_user.id, prompt)
 
 if __name__ == '__main__':
     with app.app_context():

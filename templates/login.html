@@ -5,6 +5,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <div class="nav-container">
+        <a href="{{ url_for('home') }}" class="logo">OF Caption Gen</a>
+    </div>
     <div class="auth-container">
         <h2>Login</h2>
         {% with messages = get_flashed_messages() %}

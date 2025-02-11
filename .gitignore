@@ -3,6 +3,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+create_admin.py
+test_print.py
+sep_files
 
 # C extensions
 *.so
