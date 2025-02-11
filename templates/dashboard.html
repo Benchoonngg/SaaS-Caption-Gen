@@ -59,6 +59,14 @@
 
                         <div class="mt-4">
                             <h4>Generated Caption:</h4>
+                            <!-- Add loading spinner -->
+                            <div id="loadingSpinner" class="text-center my-4" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Generating your caption...</p>
+                            </div>
+                            <!-- Existing caption result div -->
                             <div id="captionResult" class="alert alert-success copy-section" style="display: none;">
                                 <p class="mb-2" id="captionText"></p>
                                 <button class="btn btn-sm btn-primary copy-btn" onclick="copyCaption()">
@@ -133,12 +141,14 @@
         const errorMessage = document.getElementById('errorMessage');
         const creditsDisplay = document.getElementById('creditsDisplay');
         const button = document.querySelector('button[onclick="generateCaption()"]');
+        const loadingSpinner = document.getElementById('loadingSpinner');
 
         // Show loading state
         button.disabled = true;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+        button.innerHTML = 'Generating...';
         captionResult.style.display = 'none';
         errorMessage.style.display = 'none';
+        loadingSpinner.style.display = 'block';  // Show spinner
         
         fetch('/generate-caption', {
             method: 'POST',
@@ -169,9 +179,10 @@
             console.error('Error:', error);
         })
         .finally(() => {
-            // Reset button state
+            // Reset all states
             button.disabled = false;
             button.innerHTML = 'Generate Caption';
+            loadingSpinner.style.display = 'none';  // Hide spinner
         });
     }
 
