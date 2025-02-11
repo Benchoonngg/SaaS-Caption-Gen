@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - OF Caption Gen</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Bootstrap Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">OF Caption Gen</a>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3">Credits: {{ current_user.credits }}</span>
+                {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light me-2">Admin Panel</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Generate Caption</h2>
+                        <div class="form-group mb-3">
+                            <label for="promptInput" class="form-label">Enter your prompt:</label>
+                            <textarea class="form-control" id="promptInput" rows="3" 
+                                placeholder="Enter your prompt here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateCaption()">
+                            Generate Caption
+                        </button>
+
+                        <div class="mt-4">
+                            <h4>Generated Caption:</h4>
+                            <div id="captionResult" class="alert alert-success" style="display: none;"></div>
+                            <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Credits Remaining</h5>
+                        <p class="card-text display-4" id="creditsDisplay">{{ current_user.credits }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-container">
+            <h3>AI Parameters</h3>
+            <form method="POST" action="{{ url_for('update_ai_settings') }}">
+                <div class="slider-group">
+                    <label for="max_tokens">Max Tokens (16-512)</label>
+                    <input type="range" id="max_tokens" name="max_tokens" 
+                           min="16" max="512" value="{{ current_user.max_tokens|default(256) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.max_tokens|default(256) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="temperature">Temperature (0-1)</label>
+                    <input type="range" id="temperature" name="temperature" 
+                           min="0" max="1" step="0.1" value="{{ current_user.temperature|default(0.7) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.temperature|default(0.7) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="top_p">Top P (0-1)</label>
+                    <input type="range" id="top_p" name="top_p" 
+                           min="0" max="1" step="0.1" value="{{ current_user.top_p|default(0.7) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.top_p|default(0.7) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="top_k">Top K (1-100)</label>
+                    <input type="range" id="top_k" name="top_k" 
+                           min="1" max="100" value="{{ current_user.top_k|default(50) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.top_k|default(50) }}</output>
+                </div>
+
+                <button type="submit">Save Settings</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Bootstrap JS and its dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    function generateCaption() {
+        const prompt = document.getElementById('promptInput').value;
+        const captionResult = document.getElementById('captionResult');
+        const errorMessage = document.getElementById('errorMessage');
+        const creditsDisplay = document.getElementById('creditsDisplay');
+
+        // Show loading state
+        captionResult.style.display = 'none';
+        errorMessage.style.display = 'none';
+        
+        fetch('/generate-caption', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: prompt })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                errorMessage.textContent = data.error;
+                errorMessage.style.display = 'block';
+            } else {
+                captionResult.textContent = data.caption;
+                captionResult.style.display = 'block';
+                creditsDisplay.textContent = data.credits_remaining;
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = 'An error occurred while generating the caption.';
+            errorMessage.style.display = 'block';
+            console.error('Error:', error);
+        });
+    }
+    </script>
+</body>
+</html> 

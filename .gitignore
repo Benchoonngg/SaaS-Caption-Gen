@@ -3,6 +3,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+create_admin.py
+test_print.py
+sep_files
 
 # C extensions
 *.so
@@ -173,3 +176,45 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Add these to your existing .gitignore
+
+# Database configuration
+config.py
+database.ini
+*.db
+
+# API keys and secrets
+.env
+*.pem
+credentials.json
+secret.json
+
+# Local development settings
+instance/
+local_config.py
+
+# PostgreSQL dumps
+*.dump
+*.sql
+
+# Log files
+logs/
+*.log
+
+# VS Code settings
+.vscode/
+
+# Production settings
+prod_settings.py
+production.py
+
+# Cache files
+.cache/
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+env/
+ENV/
