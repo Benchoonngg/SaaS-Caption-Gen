@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - OF Caption Gen</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">OF Caption Gen</div>
+            <div class="nav-right">
+                <span class="credits-display">Credits: {{ current_user.credits }}</span>
+                <a href="{{ url_for('logout') }}" class="login-btn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="welcome-section">
+            <h2>Welcome, {{ current_user.email }}</h2>
+            <p>Generate engaging captions for your content</p>
+        </div>
+
+        <div class="generation-section">
+            <h3>Generate Caption</h3>
+            <form class="generation-form">
+                <div class="form-group">
+                    <textarea placeholder="Describe the caption you want to generate..." required></textarea>
+                </div>
+                <button type="submit" class="generate-btn">Generate Caption (1 Credit)</button>
+            </form>
+        </div>
+
+        <div class="credits-section">
+            <h3>Need more credits?</h3>
+            <div class="credit-packages">
+                <div class="credit-package">
+                    <h4>10 Credits</h4>
+                    <p class="price">$2.00</p>
+                    <button class="purchase-btn">Purchase</button>
+                </div>
+                <div class="credit-package">
+                    <h4>50 Credits</h4>
+                    <p class="price">$9.00</p>
+                    <button class="purchase-btn">Purchase</button>
+                </div>
+                <div class="credit-package">
+                    <h4>100 Credits</h4>
+                    <p class="price">$15.00</p>
+                    <button class="purchase-btn">Purchase</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
