@@ -1,4 +1,9 @@
 import logging
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 logging.basicConfig(level=logging.DEBUG)
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
@@ -14,7 +19,7 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 
 # Config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ofcaption_user:your_secure_password@localhost/ofcaption'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
 
