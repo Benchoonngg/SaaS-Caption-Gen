@@ -150,19 +150,28 @@ def delete_user(user_id):
 @app.route('/generate-caption', methods=['POST'])
 @login_required
 def generate_caption():
-    data = request.get_json()  # Get JSON data
-    prompt = data.get('prompt')  # Get prompt from JSON
+    data = request.get_json()
+    category = data.get('category')
+    prompt = data.get('prompt')
     
-    if not prompt:
-        return jsonify({"error": "No prompt provided"}), 400
+    if not prompt or not category:
+        return jsonify({"error": "Category and prompt are required"}), 400
     
     # Debug logging
-    logging.debug(f"Received prompt: {prompt}")
+    logging.debug(f"Category from frontend: '{category}'")
+    logging.debug(f"Prompt: {prompt}")
     
     try:
-        result = CaptionController.generate(current_user.id, prompt)
+        # Pass category directly instead of creating instruction
+        result = CaptionController.generate(current_user.id, prompt, category)
         logging.debug(f"Controller response: {result}")
-        return result
+        
+        # If result is a tuple (error case), return it directly
+        if isinstance(result, tuple):
+            return jsonify(result[0]), result[1]
+        # If result is a dict (success case), return it as JSON
+        return jsonify(result)
+        
     except Exception as e:
         logging.error(f"Error in generate_caption route: {str(e)}")
         return jsonify({"error": str(e)}), 500

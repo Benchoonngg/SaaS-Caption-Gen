@@ -4,51 +4,62 @@ from api import generate_caption
 import logging
 
 class CaptionController:
+    # Update instruction categories mapping to match exactly with frontend values
+    instruction_categories = {
+        "Tip Me": "Generate a Tip Me Caption",
+        "Winner": "Generate a Winner Caption",
+        "Holiday": "Generate a Holiday Caption",
+        "Bundle": "Generate a Bundle Caption",
+        "Descriptive": "Generate a Descriptive Caption",
+        "Spin the Wheel": "Generate a Spin the Wheel Caption",
+        "Girlfriend Non-Explicit": "Generate a Girlfriend Non-Explicit Caption",
+        "Girlfriend Explicit": "Generate a Girlfriend Explicit Caption",
+        "List": "Generate a List Caption",
+        "Short": "Generate a Short Caption",
+        "Sub Promo": "Generate a Sub Promo Caption",
+        "VIP": "Generate a VIP Caption"
+    }
+
     @staticmethod
-    def generate(user_id: int, prompt: str):
-        logging.debug(f"CaptionController.generate called with user_id: {user_id}, prompt: {prompt}")
-        """
-        Handle caption generation request
-        """
+    def generate(user_id: int, prompt: str, category: str):
         try:
+            # Add debug logging for category
+            logging.debug(f"Received category: '{category}'")
+            logging.debug(f"Available categories: {list(CaptionController.instruction_categories.keys())}")
+            
             # Get user
             user = User.query.get(user_id)
             if not user:
-                logging.error(f"User not found: {user_id}")
-                return jsonify({"error": "User not found"}), 404
+                return {"error": "User not found"}, 404
             
-            # Check credits
             if user.credits <= 0:
-                logging.error(f"Insufficient credits for user: {user_id}")
-                return jsonify({"error": "Insufficient credits"}), 400
+                return {"error": "No credits remaining"}, 400
+
+            # Get the full instruction for the category
+            instruction = CaptionController.instruction_categories.get(category.strip())  # Add strip()
+            if not instruction:
+                return {"error": f"Invalid category: '{category}'"}, 400
+
+            # Format the prompt with detailed instruction
+            formatted_prompt = f"### Instruction:\n{instruction}\n\n### Input:\n{prompt}\n\n### Response:\n"
             
-            # Generate caption
-            logging.debug("Calling generate_caption from API")
-            caption = generate_caption(prompt)
-            logging.debug(f"Received caption from API: {caption}")
+            logging.debug(f"Formatted prompt: {formatted_prompt}")
             
-            if not caption:
-                logging.error("Failed to generate caption")
-                return jsonify({"error": "Failed to generate caption"}), 500
+            # Generate caption using the API
+            caption = generate_caption(formatted_prompt)
             
-            # Deduct credit
-            user.credits -= 1
-            db.session.commit()
-            logging.debug(f"Updated credits for user {user_id}: {user.credits}")
-            
-            # Return formatted response
-            response = {
-                "caption": caption,
-                "credits_remaining": user.credits,
-                "status": "success"
-            }
-            logging.debug(f"Returning response: {response}")
-            return jsonify(response), 200
-            
+            if caption:
+                # Deduct credit
+                user.credits -= 1
+                db.session.commit()
+                
+                return {
+                    "caption": caption,
+                    "credits_remaining": user.credits
+                }
+            else:
+                return {"error": "Failed to generate caption"}, 500
+                
         except Exception as e:
             logging.error(f"Error in CaptionController.generate: {str(e)}")
-            db.session.rollback()
-            return jsonify({
-                "error": str(e),
-                "status": "error"
-            }), 500 
+            return {"error": str(e)}, 500 
