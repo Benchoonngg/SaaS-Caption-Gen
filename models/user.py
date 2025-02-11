@@ -13,9 +13,9 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
-    max_tokens = db.Column(db.Integer, default=256)
+    max_tokens = db.Column(db.Integer, default=1024)
     temperature = db.Column(db.Float, default=0.7)
-    top_p = db.Column(db.Float, default=0.7)
+    top_p = db.Column(db.Float, default=0.90)
     top_k = db.Column(db.Integer, default=50)
 
     def set_password(self, password):
