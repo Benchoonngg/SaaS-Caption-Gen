@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash
 from functools import wraps
 from models.user import db, User
 from controllers.caption_controller import CaptionController
+from flask_migrate import Migrate
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -19,6 +20,7 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 
 # Initialize extensions
 db.init_app(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -91,7 +93,7 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', user=current_user)
 
 @app.route('/logout')
 @login_required
@@ -148,11 +150,40 @@ def delete_user(user_id):
 @app.route('/generate-caption', methods=['POST'])
 @login_required
 def generate_caption():
-    prompt = request.json.get('prompt')
+    data = request.get_json()  # Get JSON data
+    prompt = data.get('prompt')  # Get prompt from JSON
+    
     if not prompt:
         return jsonify({"error": "No prompt provided"}), 400
+    
+    # Debug logging
+    logging.debug(f"Received prompt: {prompt}")
+    
+    try:
+        result = CaptionController.generate(current_user.id, prompt)
+        logging.debug(f"Controller response: {result}")
+        return result
+    except Exception as e:
+        logging.error(f"Error in generate_caption route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/update_ai_settings', methods=['POST'])
+@login_required
+def update_ai_settings():
+    try:
+        current_user.max_tokens = int(request.form.get('max_tokens', 256))
+        current_user.temperature = float(request.form.get('temperature', 0.7))
+        current_user.top_p = float(request.form.get('top_p', 0.7))
+        current_user.top_k = int(request.form.get('top_k', 50))
         
-    return CaptionController.generate(current_user.id, prompt)
+        db.session.commit()
+        flash('Settings updated successfully!', 'success')
+    except Exception as e:
+        print(f"Debug - Error updating settings: {str(e)}")
+        flash('Error updating settings', 'error')
+        db.session.rollback()
+    
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     with app.app_context():

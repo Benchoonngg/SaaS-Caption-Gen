@@ -54,6 +54,45 @@
                 </div>
             </div>
         </div>
+
+        <div class="settings-container">
+            <h3>AI Parameters</h3>
+            <form method="POST" action="{{ url_for('update_ai_settings') }}">
+                <div class="slider-group">
+                    <label for="max_tokens">Max Tokens (16-512)</label>
+                    <input type="range" id="max_tokens" name="max_tokens" 
+                           min="16" max="512" value="{{ current_user.max_tokens|default(256) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.max_tokens|default(256) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="temperature">Temperature (0-1)</label>
+                    <input type="range" id="temperature" name="temperature" 
+                           min="0" max="1" step="0.1" value="{{ current_user.temperature|default(0.7) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.temperature|default(0.7) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="top_p">Top P (0-1)</label>
+                    <input type="range" id="top_p" name="top_p" 
+                           min="0" max="1" step="0.1" value="{{ current_user.top_p|default(0.7) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.top_p|default(0.7) }}</output>
+                </div>
+
+                <div class="slider-group">
+                    <label for="top_k">Top K (1-100)</label>
+                    <input type="range" id="top_k" name="top_k" 
+                           min="1" max="100" value="{{ current_user.top_k|default(50) }}"
+                           oninput="this.nextElementSibling.value = this.value">
+                    <output>{{ current_user.top_k|default(50) }}</output>
+                </div>
+
+                <button type="submit">Save Settings</button>
+            </form>
+        </div>
     </div>
 
     <!-- Add Bootstrap JS and its dependencies -->

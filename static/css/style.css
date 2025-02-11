@@ -287,4 +287,32 @@ th {
 
 .copy-btn:hover {
     background: #0056b3;
+}
+
+.settings-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.slider-group {
+    margin: 20px 0;
+}
+
+.slider-group label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.slider-group input[type="range"] {
+    width: 100%;
+    margin-right: 10px;
+}
+
+.slider-group output {
+    display: inline-block;
+    min-width: 40px;
 } 
